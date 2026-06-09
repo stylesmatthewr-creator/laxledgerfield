@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { ChevronDown, ChevronUp, ArrowLeft, Trash2, Plus } from 'lucide-react';
 
 const POSITIONS = {
   MIDFIELD: ['SHOTS', 'GOALS', 'ASSISTS', 'GB', 'DRAWS', 'TO'],
   ATTACK: ['SHOTS', 'GOALS', 'ASSISTS', 'GB', 'TO'],
-  DEFENSE: ['GOALS', 'ASSISTS', 'GB', 'TO'],
+  DEFENSE: ['SHOTS', 'GOALS', 'ASSISTS', 'GB', 'TO'],
   GOALIE: ['SHOTS', 'SAVES', 'GB', 'INTERCEPTIONS']
 };
 
@@ -100,7 +100,6 @@ const App = () => {
         {gameState === 'LIVE' && <button onClick={endGame} className="bg-red-900 text-white px-3 py-1 text-xs font-bold">END</button>}
       </div>
 
-      {/* TEAM TOTALS */}
       <div className="bg-[#2D3436] text-white p-3 mb-4 rounded-sm">
         <h2 className="text-[10px] font-bold mb-1 opacity-70">TEAM TOTALS</h2>
         <div className="flex gap-3 overflow-x-auto text-[10px] font-bold">
@@ -119,7 +118,7 @@ const App = () => {
               <div className="mt-3 pt-3 border-t">
                 <div className="flex gap-2 mb-3">
                   <input placeholder="#" value={p.number} onChange={(e) => { const n = [...players]; n[idx].number = e.target.value; setPlayers(n); }} className="w-12 border p-1 text-sm" />
-                  <input placeholder="NAME" value={p.name} onChange={(e) => { const n = [...players]; n[idx].name = e.target.value; setPlayers(n); }} className="flex-1 border p-1 text-sm" />
+                  <input placeholder="NAME" value={p.name} autoCapitalize="characters" onChange={(e) => { const n = [...players]; n[idx].name = e.target.value; setPlayers(n); }} className="flex-1 border p-1 text-sm uppercase" />
                   <select value={p.position} onChange={(e) => { const n = [...players]; n[idx].position = e.target.value; setPlayers(n); }} className="border p-1 text-[10px]">{Object.keys(POSITIONS).map(pos => <option key={pos} value={pos}>{pos}</option>)}</select>
                 </div>
                 <div className="flex overflow-x-auto gap-1">
