@@ -90,14 +90,20 @@ const App = () => {
             </div>
             {!p.collapsed && (
               <div className="mt-3 pt-3 border-t">
-                {/* Edit fields logic kept for brevity */}
+                {/* RESTORED: These are the editable fields */}
+                <div className="flex gap-2 mb-3">
+                  <input placeholder="#" value={p.number} onChange={(e) => { const n = [...players]; n[idx].number = e.target.value; setPlayers(n); }} className="w-12 border p-1 text-sm" />
+                  <input placeholder="NAME" value={p.name} onChange={(e) => { const n = [...players]; n[idx].name = e.target.value; setPlayers(n); }} className="flex-1 border p-1 text-sm" />
+                  <select value={p.position} onChange={(e) => { const n = [...players]; n[idx].position = e.target.value; setPlayers(n); }} className="border p-1 text-[10px]">{Object.keys(POSITIONS).map(pos => <option key={pos} value={pos}>{pos}</option>)}</select>
+                </div>
+                {/* Rest of the stat UI */}
                 <div className="flex overflow-x-auto gap-1">
                   {POSITIONS[p.position].map(s => (
                     <div key={s} className="flex flex-col items-center min-w-[50px]">
                       <span className="text-[7px] font-bold">{s}</span>
-                      <button onClick={() => updateStat(p.id, s, 1)} className="w-full bg-[#2D3436] text-white">+</button>
+                      {!selectedGame && <button onClick={() => updateStat(p.id, s, 1)} className="w-full bg-[#2D3436] text-white">+</button>}
                       <div className="w-full text-center font-bold text-sm border bg-[#F9F7F2]">{p.stats[s]}</div>
-                      <button onClick={() => updateStat(p.id, s, -1)} className="w-full bg-[#2D3436] text-white">-</button>
+                      {!selectedGame && <button onClick={() => updateStat(p.id, s, -1)} className="w-full bg-[#2D3436] text-white">-</button>}
                     </div>
                   ))}
                 </div>
