@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronDown, ChevronUp, ArrowLeft, Trash2, Plus, Save, History } from 'lucide-react';
+import { ChevronDown, ChevronUp, ArrowLeft, Trash2, Plus, Save, History, RefreshCw } from 'lucide-react';
 
 const POSITIONS = {
   MIDFIELD: ['SHOTS', 'GOALS', 'ASSISTS', 'GB', 'DRAWS', 'TO'],
@@ -25,11 +25,19 @@ const App = () => {
   };
 
   const saveGame = () => {
-    const newGame = { id: Date.now(), date: new Date().toLocaleDateString(), players: activePlayers, teamName: activeTeam.name };
-    const updated = [...pastGames, newGame];
+    const updated = selectedGame 
+      ? pastGames.map(g => g.id === selectedGame.id ? { ...selectedGame, players: activePlayers } : g)
+      : [...pastGames, { id: Date.now(), date: new Date().toLocaleDateString(), players: activePlayers, teamName: activeTeam.name }];
     setPastGames(updated);
     localStorage.setItem('lax-history', JSON.stringify(updated));
+    setSelectedGame(null);
     setGameState('MAIN');
+  };
+
+  const deleteGame = (id) => {
+    const updated = pastGames.filter(g => g.id !== id);
+    setPastGames(updated);
+    localStorage.setItem('lax-history', JSON.stringify(updated));
   };
 
   const startGame = (team) => {
@@ -39,7 +47,7 @@ const App = () => {
   };
 
   const getTeamTotals = () => {
-    const players = selectedGame?.players || activePlayers;
+    const players = activePlayers;
     let shots = 0, saves = 0, shotsAgainst = 0;
     const totals = { SHOTS: 0, GOALS: 0, ASSISTS: 0, GB: 0, DRAWS: 0, TO: 0 };
     players.forEach(p => {
@@ -65,8 +73,9 @@ const App = () => {
     <div className="p-4 bg-[#F9F7F2] min-h-screen">
       <div className="flex justify-between mb-6"><button onClick={() => setGameState('MAIN')}><ArrowLeft/></button> <h1 className="font-black">HISTORY</h1></div>
       {pastGames.map(g => (
-        <div key={g.id} className="p-4 bg-white border mb-2 font-bold cursor-pointer" onClick={() => { setSelectedGame(g); setGameState('LIVE'); }}>
-            {g.date} | {g.teamName}
+        <div key={g.id} className="p-4 bg-white border mb-2 font-bold flex justify-between items-center">
+            <span className="cursor-pointer" onClick={() => { setSelectedGame(g); setActivePlayers(g.players); setGameState('LIVE'); }}>{g.date} | {g.teamName}</span>
+            <button onClick={() => deleteGame(g.id)} className="text-red-800"><Trash2 size={18}/></button>
         </div>
       ))}
     </div>
@@ -87,18 +96,13 @@ const App = () => {
   if (gameState === 'EDIT_TEAM') return (
     <div className="p-4 bg-[#F9F7F2] min-h-screen">
         <input className="w-full p-2 mb-4 font-bold text-lg border uppercase" placeholder="TEAM NAME" value={activeTeam.name} onChange={e => setActiveTeam({...activeTeam, name: e.target.value})} />
-        {/* Header Labels */}
         <div className="flex text-[10px] font-bold uppercase mb-2 px-1 gap-1">
-            <div className="w-10">#</div>
-            <div className="flex-1">Name</div>
-            <div className="w-24">Pos</div>
+            <div className="w-10">#</div><div className="flex-1">Name</div><div className="w-24">Pos</div>
         </div>
         {activeTeam.players.map((p, i) => (
             <div key={i} className="flex gap-1 mb-2 items-center">
                 <input className="w-10 p-2 border text-sm uppercase" value={p.number} onChange={e => { const ps = [...activeTeam.players]; ps[i].number = e.target.value; setActiveTeam({...activeTeam, players: ps})}} />
-                {/* Reduced flex-1/width to prioritize dropdown space */}
                 <input className="flex-[2] p-2 border text-sm uppercase" autoCapitalize="characters" value={p.name} onChange={e => { const ps = [...activeTeam.players]; ps[i].name = e.target.value; setActiveTeam({...activeTeam, players: ps})}} />
-                {/* Increased width for Position dropdown */}
                 <select className="border text-[10px] w-24 p-2 bg-white" value={p.position} onChange={e => { const ps = [...activeTeam.players]; ps[i].position = e.target.value; setActiveTeam({...activeTeam, players: ps})}}>{Object.keys(POSITIONS).map(pos => <option key={pos} value={pos}>{pos}</option>)}</select>
                 <button onClick={() => setActiveTeam({...activeTeam, players: activeTeam.players.filter((_, idx) => idx !== i)})}><Trash2 size={16} className="text-red-800"/></button>
             </div>
@@ -122,21 +126,19 @@ const App = () => {
         <button onClick={() => { setSelectedGame(null); setGameState('MAIN'); }}><ArrowLeft/></button>
         <h1 className="font-black text-sm">LAX LEDGER – FIELD</h1>
         <div className="flex gap-2">
-            {!selectedGame && <button onClick={saveGame} className="bg-red-900 text-white px-3 py-1 font-bold text-[10px]">END</button>}
-            {!selectedGame && <button onClick={() => { saveTeam({ ...activeTeam, players: activePlayers }); alert('ROSTER SAVED!'); }} className="bg-[#E8E4DC] p-1"><Save size={18}/></button>}
+            <button onClick={saveGame} className="bg-red-900 text-white px-3 py-1 font-bold text-[10px]">{selectedGame ? 'UPDATE' : 'END'}</button>
+            <button onClick={() => { saveTeam({ ...activeTeam, players: activePlayers }); alert('ROSTER SAVED!'); }} className="bg-[#E8E4DC] p-1"><Save size={18}/></button>
         </div>
       </div>
-      
       <div className="bg-[#2D3436] text-white p-3 mb-4 rounded-sm text-[10px] font-bold flex flex-wrap gap-x-3 gap-y-1">
         <span>SH:{totals.SHOTS}</span> <span>GO:{totals.GOALS}</span> <span>AS:{totals.ASSISTS}</span> 
         <span>GB:{totals.GB}</span> <span>DR:{totals.DRAWS}</span> <span>TO:{totals.TO}</span> 
         <span>SA:{totals.SA}</span> <span>SV:{totals.SV}</span>
       </div>
-
       <div className="space-y-3 pb-20">
-        {(selectedGame?.players || activePlayers).map((p, idx) => (
+        {activePlayers.map((p, idx) => (
           <div key={idx} className="bg-white border p-3">
-            <div className="flex justify-between font-bold text-sm" onClick={() => !selectedGame && setActivePlayers(activePlayers.map((pl, i) => i === idx ? {...pl, collapsed: !pl.collapsed} : pl))}>
+            <div className="flex justify-between font-bold text-sm" onClick={() => setActivePlayers(activePlayers.map((pl, i) => i === idx ? {...pl, collapsed: !pl.collapsed} : pl))}>
                 <span>#{p.number} {p.name}</span> {p.collapsed ? <ChevronDown/> : <ChevronUp/>}
             </div>
             {!p.collapsed && (
@@ -144,9 +146,9 @@ const App = () => {
                     {POSITIONS[p.position].map(s => (
                         <div key={s} className="flex flex-col items-center min-w-[50px]">
                             <span className="text-[7px]">{s}</span>
-                            {!selectedGame && <button className="bg-[#2D3436] text-white w-full" onClick={() => setActivePlayers(activePlayers.map((pl, i) => i === idx ? {...pl, stats: {...pl.stats, [s]: pl.stats[s]+1}} : pl))}>+</button>}
+                            <button className="bg-[#2D3436] text-white w-full" onClick={() => setActivePlayers(activePlayers.map((pl, i) => i === idx ? {...pl, stats: {...pl.stats, [s]: pl.stats[s]+1}} : pl))}>+</button>
                             <div className="border w-full text-center font-bold text-sm">{p.stats[s]}</div>
-                            {!selectedGame && <button className="bg-[#2D3436] text-white w-full" onClick={() => setActivePlayers(activePlayers.map((pl, i) => i === idx ? {...pl, stats: {...pl.stats, [s]: Math.max(0, pl.stats[s]-1)}} : pl))}>-</button>}
+                            <button className="bg-[#2D3436] text-white w-full" onClick={() => setActivePlayers(activePlayers.map((pl, i) => i === idx ? {...pl, stats: {...pl.stats, [s]: Math.max(0, pl.stats[s]-1)}} : pl))}>-</button>
                         </div>
                     ))}
                     {p.position === 'GOALIE' && (
