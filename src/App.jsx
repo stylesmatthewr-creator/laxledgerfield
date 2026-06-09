@@ -87,11 +87,19 @@ const App = () => {
   if (gameState === 'EDIT_TEAM') return (
     <div className="p-4 bg-[#F9F7F2] min-h-screen">
         <input className="w-full p-2 mb-4 font-bold text-lg border uppercase" placeholder="TEAM NAME" value={activeTeam.name} onChange={e => setActiveTeam({...activeTeam, name: e.target.value})} />
+        {/* Header Labels */}
+        <div className="flex text-[10px] font-bold uppercase mb-2 px-1 gap-1">
+            <div className="w-10">#</div>
+            <div className="flex-1">Name</div>
+            <div className="w-24">Pos</div>
+        </div>
         {activeTeam.players.map((p, i) => (
             <div key={i} className="flex gap-1 mb-2 items-center">
-                <input className="w-12 p-2 border text-sm uppercase" value={p.number} onChange={e => { const ps = [...activeTeam.players]; ps[i].number = e.target.value; setActiveTeam({...activeTeam, players: ps})}} />
-                <input className="flex-1 p-2 border text-sm uppercase" autoCapitalize="characters" value={p.name} onChange={e => { const ps = [...activeTeam.players]; ps[i].name = e.target.value; setActiveTeam({...activeTeam, players: ps})}} />
-                <select className="border text-[9px] w-16 p-2" value={p.position} onChange={e => { const ps = [...activeTeam.players]; ps[i].position = e.target.value; setActiveTeam({...activeTeam, players: ps})}}>{Object.keys(POSITIONS).map(pos => <option key={pos} value={pos}>{pos}</option>)}</select>
+                <input className="w-10 p-2 border text-sm uppercase" value={p.number} onChange={e => { const ps = [...activeTeam.players]; ps[i].number = e.target.value; setActiveTeam({...activeTeam, players: ps})}} />
+                {/* Reduced flex-1/width to prioritize dropdown space */}
+                <input className="flex-[2] p-2 border text-sm uppercase" autoCapitalize="characters" value={p.name} onChange={e => { const ps = [...activeTeam.players]; ps[i].name = e.target.value; setActiveTeam({...activeTeam, players: ps})}} />
+                {/* Increased width for Position dropdown */}
+                <select className="border text-[10px] w-24 p-2 bg-white" value={p.position} onChange={e => { const ps = [...activeTeam.players]; ps[i].position = e.target.value; setActiveTeam({...activeTeam, players: ps})}}>{Object.keys(POSITIONS).map(pos => <option key={pos} value={pos}>{pos}</option>)}</select>
                 <button onClick={() => setActiveTeam({...activeTeam, players: activeTeam.players.filter((_, idx) => idx !== i)})}><Trash2 size={16} className="text-red-800"/></button>
             </div>
         ))}
