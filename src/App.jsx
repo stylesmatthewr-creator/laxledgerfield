@@ -34,13 +34,25 @@ const App = () => {
 
   const getTeamTotals = () => {
     const activePlayers = selectedGame?.players || players;
-    const totals = {};
+    let shots = 0;
+    let saves = 0;
+    let shotsAgainst = 0;
+    const totals = { SHOTS: 0, GOALS: 0, ASSISTS: 0, GB: 0, DRAWS: 0, TO: 0 };
+
     activePlayers.forEach(p => {
+      if (p.position === 'GOALIE') {
+        shotsAgainst += p.stats.SHOTS;
+        saves += p.stats.SAVES;
+      } else {
+        shots += p.stats.SHOTS;
+      }
       Object.entries(p.stats).forEach(([stat, val]) => {
-        totals[stat] = (totals[stat] || 0) + val;
+        if (totals.hasOwnProperty(stat)) totals[stat] += val;
       });
     });
-    return totals;
+
+    const svPct = shotsAgainst > 0 ? ((saves / shotsAgainst) * 100).toFixed(0) + '%' : '0%';
+    return { ...totals, SHOTS: shots, SA: shotsAgainst, SV: svPct };
   };
 
   const endGame = () => {
@@ -56,6 +68,8 @@ const App = () => {
     setPastGames(updated);
     localStorage.setItem('lax-history', JSON.stringify(updated));
   };
+
+  const totals = getTeamTotals();
 
   if (gameState === 'SETUP') return (
     <div className="p-6 bg-[#F9F7F2] min-h-screen text-[#2D3436]">
@@ -90,20 +104,25 @@ const App = () => {
     </div>
   );
 
-  const totals = getTeamTotals();
-
   return (
     <div className="min-h-screen bg-[#F9F7F2] p-4 font-sans uppercase text-[#2D3436]">
       <div className="flex justify-between items-center mb-6">
         <button onClick={() => { setSelectedGame(null); setGameState('HISTORY'); }}><ArrowLeft/></button>
-        <h1 className="text-xl font-black tracking-tighter">{gameState === 'VIEW_GAME' ? 'GAME REVIEW' : 'LAX LEDGER'}</h1>
+        <h1 className="text-xl font-black tracking-tighter">LAX LEDGER – FIELD</h1>
         {gameState === 'LIVE' && <button onClick={endGame} className="bg-red-900 text-white px-3 py-1 text-xs font-bold">END</button>}
       </div>
 
       <div className="bg-[#2D3436] text-white p-3 mb-4 rounded-sm">
         <h2 className="text-[10px] font-bold mb-1 opacity-70">TEAM TOTALS</h2>
         <div className="flex gap-3 overflow-x-auto text-[10px] font-bold">
-          {Object.entries(totals).filter(([_, v]) => v > 0).map(([k, v]) => <span key={k}>{k.slice(0,2)}:{v}</span>)}
+          <span>SH:{totals.SHOTS}</span>
+          <span>GO:{totals.GOALS}</span>
+          <span>AS:{totals.ASSISTS}</span>
+          <span>GB:{totals.GB}</span>
+          <span>DR:{totals.DRAWS}</span>
+          <span>TO:{totals.TO}</span>
+          <span>SA:{totals.SA}</span>
+          <span>SV:{totals.SV}</span>
         </div>
       </div>
 
