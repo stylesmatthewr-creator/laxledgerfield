@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronDown, ChevronUp, ArrowLeft, Trash2, Plus, Save, History, RefreshCw } from 'lucide-react';
+import { ChevronDown, ChevronUp, ArrowLeft, Trash2, Plus, Save, History, ArrowUpDown } from 'lucide-react';
 
 const POSITIONS = {
   MIDFIELD: ['SHOTS', 'GOALS', 'ASSISTS', 'GB', 'DRAWS', 'TO'],
@@ -15,6 +15,14 @@ const App = () => {
   const [activeTeam, setActiveTeam] = useState(null);
   const [activePlayers, setActivePlayers] = useState([]);
   const [selectedGame, setSelectedGame] = useState(null);
+
+  const sortPlayers = (criteria) => {
+    let sorted = [...activePlayers];
+    if (criteria === 'number') sorted.sort((a, b) => parseInt(a.number) - parseInt(b.number));
+    if (criteria === 'name') sorted.sort((a, b) => a.name.localeCompare(b.name));
+    if (criteria === 'position') sorted.sort((a, b) => a.position.localeCompare(b.position));
+    setActivePlayers(sorted);
+  };
 
   const saveTeam = (team) => {
     const updated = teams.find(t => t.id === team.id) 
@@ -126,15 +134,24 @@ const App = () => {
         <button onClick={() => { setSelectedGame(null); setGameState('MAIN'); }}><ArrowLeft/></button>
         <h1 className="font-black text-sm">LAX LEDGER – FIELD</h1>
         <div className="flex gap-2">
-            <button onClick={saveGame} className="bg-red-900 text-white px-3 py-1 font-bold text-[10px]">{selectedGame ? 'UPDATE' : 'END'}</button>
+            {!selectedGame && <button onClick={saveGame} className="bg-red-900 text-white px-3 py-1 font-bold text-[10px]">END</button>}
             <button onClick={() => { saveTeam({ ...activeTeam, players: activePlayers }); alert('ROSTER SAVED!'); }} className="bg-[#E8E4DC] p-1"><Save size={18}/></button>
         </div>
       </div>
+      
+      {/* SORT CONTROLS */}
+      <div className="flex gap-2 mb-4">
+        <button onClick={() => sortPlayers('number')} className="bg-[#E8E4DC] p-2 font-bold text-[9px] flex-1">SORT #</button>
+        <button onClick={() => sortPlayers('name')} className="bg-[#E8E4DC] p-2 font-bold text-[9px] flex-1">SORT NAME</button>
+        <button onClick={() => sortPlayers('position')} className="bg-[#E8E4DC] p-2 font-bold text-[9px] flex-1">SORT POS</button>
+      </div>
+
       <div className="bg-[#2D3436] text-white p-3 mb-4 rounded-sm text-[10px] font-bold flex flex-wrap gap-x-3 gap-y-1">
         <span>SH:{totals.SHOTS}</span> <span>GO:{totals.GOALS}</span> <span>AS:{totals.ASSISTS}</span> 
         <span>GB:{totals.GB}</span> <span>DR:{totals.DRAWS}</span> <span>TO:{totals.TO}</span> 
         <span>SA:{totals.SA}</span> <span>SV:{totals.SV}</span>
       </div>
+      
       <div className="space-y-3 pb-20">
         {activePlayers.map((p, idx) => (
           <div key={idx} className="bg-white border p-3">
@@ -146,9 +163,9 @@ const App = () => {
                     {POSITIONS[p.position].map(s => (
                         <div key={s} className="flex flex-col items-center min-w-[50px]">
                             <span className="text-[7px]">{s}</span>
-                            <button className="bg-[#2D3436] text-white w-full" onClick={() => setActivePlayers(activePlayers.map((pl, i) => i === idx ? {...pl, stats: {...pl.stats, [s]: pl.stats[s]+1}} : pl))}>+</button>
+                            {!selectedGame && <button className="bg-[#2D3436] text-white w-full" onClick={() => setActivePlayers(activePlayers.map((pl, i) => i === idx ? {...pl, stats: {...pl.stats, [s]: pl.stats[s]+1}} : pl))}>+</button>}
                             <div className="border w-full text-center font-bold text-sm">{p.stats[s]}</div>
-                            <button className="bg-[#2D3436] text-white w-full" onClick={() => setActivePlayers(activePlayers.map((pl, i) => i === idx ? {...pl, stats: {...pl.stats, [s]: Math.max(0, pl.stats[s]-1)}} : pl))}>-</button>
+                            {!selectedGame && <button className="bg-[#2D3436] text-white w-full" onClick={() => setActivePlayers(activePlayers.map((pl, i) => i === idx ? {...pl, stats: {...pl.stats, [s]: Math.max(0, pl.stats[s]-1)}} : pl))}>-</button>}
                         </div>
                     ))}
                     {p.position === 'GOALIE' && (
